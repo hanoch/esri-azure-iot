@@ -7,6 +7,25 @@
 *.jar
 *.war
 *.ear
+*.suo
+.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+*.suo
+*.user
+*.trx
+*.cspkg
+*.azpkg
+*.png
+Traces/
+bin/
+obj/
+packages/
+TestResults/
+.nuget/
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
