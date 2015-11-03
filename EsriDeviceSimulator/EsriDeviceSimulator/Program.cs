@@ -10,8 +10,8 @@ namespace EsriDeviceSimulator
 {
     class Program
     {
-        // plug-in the iothub connection string here
-        static string IotHubConnectionString = "HostName=esri-simulator-test.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=0Hknvn6FdzXP4KUQm1H7TlaWfC8LtBunEDHXrYqBEME=";
+        // Pass the iothub connection string as argument to this exe
+        static string IotHubConnectionString = "<ConnectionString>";
 
         // NOTE: all of these devices must already be registered in the iot hub
         static string[] DeviceIdList = { 
@@ -22,6 +22,14 @@ namespace EsriDeviceSimulator
 
         static void Main(string[] args)
         {
+            if (args.Length != 1)
+            {
+                Console.WriteLine("Usage: EsriDeviceSimulator.exe <IotHubConnectionString>");
+                return;
+            }
+
+            IotHubConnectionString = args[0];
+
             List<GeoDeviceSimulator> sims = new List<GeoDeviceSimulator>();
 
             foreach(string deviceId in DeviceIdList)
