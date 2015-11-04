@@ -42,23 +42,30 @@ namespace EsriDeviceSimulator
         public async Task SendTelemetryAsync()
         {
             int sendCount = 0;
-
-            while (!cts.IsCancellationRequested)
+            GeoData[] geoDataList = GeoData.GetData("Demo2GF.csv").ToArray();
+            int count = geoDataList.Length;
+            try
             {
-                Random r = new Random(Environment.TickCount);
-                using (Message m = 
-                    new Message(GenerateTelemetryBytes(this.deviceId, -104.5m + r.Next(-5, 5), 39.966667m + r.Next(-5, 5), 97.0m, 4326)))
+                while (!cts.IsCancellationRequested)
                 {
-                    await this.deviceClient.SendEventAsync(m);
-                    sendCount++;
-
-                    if (sendCount % 10 == 0)
+                    byte[] messageData = GenerateTelemetryBytes(this.deviceId, geoDataList[sendCount % count]);
+                    using (Message m = new Message(messageData))
                     {
-                        this.Log("Sent " + sendCount + " messages");
-                    }
+                        await this.deviceClient.SendEventAsync(m);
+                        sendCount++;
 
-                    await Task.Delay(this.telemetryInterval);
+                        if (sendCount % 10 == 0)
+                        {
+                            this.Log("Sent " + sendCount + " messages");
+                        }
+
+                        await Task.Delay(this.telemetryInterval);
+                    }
                 }
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex);
             }
 
             this.Log("Stopping telemetry pump");
@@ -86,22 +93,12 @@ namespace EsriDeviceSimulator
             Console.WriteLine("[{0}] Device {1}: {2}", DateTime.Now, this.deviceId, message);
         }
 
-        public static byte[] GenerateTelemetryBytes(string id, decimal xval, decimal yval, decimal zval, int wkidval)
+        public static byte[] GenerateTelemetryBytes(string id, GeoData geoData)
         {
-            return System.Text.Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new
+            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new
             {
-                DeviceId = id,
-                StartTime = GetEpoch(),
-                geometry = new
-                {
-                    x = xval,
-                    y = yval,
-                    z = zval,
-                    spatialReference = new 
-                    {
-                        wkid = wkidval,
-                    }
-                }
+                deviceId = id,
+                geoData = geoData
             }));
         }
 
