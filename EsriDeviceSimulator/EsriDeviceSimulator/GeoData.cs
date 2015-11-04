@@ -7,6 +7,32 @@ using System.Threading.Tasks;
 
 namespace EsriDeviceSimulator
 {
+    public class GeoDataLoader
+    {
+        public static IDictionary<string, IList<GeoData>> GetGeoDataCollection(string filename)
+        {
+            Dictionary<string, IList<GeoData>> geoMap = new Dictionary<string, IList<GeoData>>();
+
+            List<string> lines = File.ReadAllLines(filename).ToList();
+
+            lines.RemoveAt(0);
+
+            foreach(string line in lines)
+            {
+                GeoData newGeoData = GeoData.Parse(line);
+                IList<GeoData> geoDataList = null;
+                if(!geoMap.TryGetValue(newGeoData.Suspect, out geoDataList))
+                {
+                    geoDataList = new List<GeoData>();
+                    geoMap.Add(newGeoData.Suspect, geoDataList);
+                }
+                geoDataList.Add(newGeoData);
+            }
+
+            return geoMap;
+        }
+    }
+
     public class GeoData
     {
         public string Suspect { get; set; }
@@ -20,19 +46,11 @@ namespace EsriDeviceSimulator
         public string SpeedMph { get; set; }
         public string CourseDegree { get; set; }
 
-        public static IEnumerable<GeoData> GetData(string fileName)
+        private GeoData()
         {
-            List<string> lines = File.ReadAllLines(fileName).ToList();
-
-            lines.RemoveAt(0);
-
-            foreach (string line in lines)
-            {
-                yield return Parse(line);
-            }
         }
 
-        static GeoData Parse(string data)
+        static public GeoData Parse(string data)
         {
             string[] tokens = data.Split(',');
 

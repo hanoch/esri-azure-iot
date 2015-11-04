@@ -4,22 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Azure.Devices;
 using Microsoft.Azure.Devices.Client;
 
 namespace EsriDeviceSimulator
 {
     class Program
     {
-        // Pass the iothub connection string as argument to this exe
-        static string IotHubConnectionString = "<ConnectionString>";
-
-        // NOTE: all of these devices must already be registered in the iot hub
-        static string[] DeviceIdList = { 
-                                       "testdevice1", 
-                                       "testdevice2", 
-                                       "testdevice3" 
-                                   };
-
         static void Main(string[] args)
         {
             if (args.Length != 1)
@@ -28,13 +19,18 @@ namespace EsriDeviceSimulator
                 return;
             }
 
-            IotHubConnectionString = args[0];
+            string iotHubConnectionString = args[0];
 
             List<GeoDeviceSimulator> sims = new List<GeoDeviceSimulator>();
 
-            foreach(string deviceId in DeviceIdList)
+            IDictionary<string, IList<GeoData>> deviceDataMap = GeoDataLoader.GetGeoDataCollection("Demo2GF.csv");
+            
+            // make sure devices are registered
+            EnsureDevicesAsync(iotHubConnectionString, deviceDataMap.Keys.ToList()).Wait();
+
+            foreach(string deviceId in deviceDataMap.Keys)
             {
-                sims.Add(new GeoDeviceSimulator(IotHubConnectionString, deviceId, TimeSpan.FromSeconds(1)));
+                sims.Add(new GeoDeviceSimulator(iotHubConnectionString, deviceId, deviceDataMap[deviceId], TimeSpan.FromSeconds(1)));
             }
 
             foreach(var sim in sims)
@@ -49,6 +45,21 @@ namespace EsriDeviceSimulator
             }
 
             Console.ReadLine();
+        }
+
+        static async Task EnsureDevicesAsync(string connectionString, IList<string> deviceIds)
+        {
+            RegistryManager rm = RegistryManager.CreateFromConnectionString(connectionString);
+            foreach(string deviceId in deviceIds)
+            {
+                Console.WriteLine("Verifying device: " + deviceId);
+                Device d = await rm.GetDeviceAsync(deviceId);
+                if(d == null)
+                {
+                    Console.WriteLine("Adding non-existent device: " + deviceId);
+                    await rm.AddDeviceAsync(new Device(deviceId));
+                }
+            }
         }
     }
 }

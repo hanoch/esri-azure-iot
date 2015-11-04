@@ -16,14 +16,16 @@ namespace EsriDeviceSimulator
         readonly CancellationTokenSource cts;
         readonly DeviceClient deviceClient;
         readonly TimeSpan telemetryInterval;
+        readonly IList<GeoData> sampleData;
 
-        public GeoDeviceSimulator(string connectionString, string deviceId, TimeSpan telemetryInterval)
+        public GeoDeviceSimulator(string connectionString, string deviceId, IList<GeoData> sampleData, TimeSpan telemetryInterval)
         {
             this.deviceId = deviceId;
             this.connectionString = connectionString;
             this.cts = new CancellationTokenSource();
             this.deviceClient = DeviceClient.CreateFromConnectionString(this.connectionString, deviceId);
             this.telemetryInterval = telemetryInterval;
+            this.sampleData = sampleData;
         }
 
         public void StartAsync()
@@ -42,7 +44,7 @@ namespace EsriDeviceSimulator
         public async Task SendTelemetryAsync()
         {
             int sendCount = 0;
-            GeoData[] geoDataList = GeoData.GetData("Demo2GF.csv").ToArray();
+            GeoData[] geoDataList = this.sampleData.ToArray(); 
             int count = geoDataList.Length;
             try
             {
