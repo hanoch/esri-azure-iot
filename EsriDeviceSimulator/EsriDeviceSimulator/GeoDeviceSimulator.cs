@@ -97,15 +97,18 @@ namespace EsriDeviceSimulator
                     x = xval,
                     y = yval,
                     z = zval,
-                    wkid = wkidval,
+                    spatialReference = new 
+                    {
+                        wkid = wkidval,
+                    }
                 }
             }));
         }
 
-        static int GetEpoch()
+        static long GetEpoch()
         {
             TimeSpan t = DateTime.UtcNow - new DateTime(1970, 1, 1);
-            return (int)t.TotalSeconds;
+            return (long)t.TotalMilliseconds;
         }
     }
 }

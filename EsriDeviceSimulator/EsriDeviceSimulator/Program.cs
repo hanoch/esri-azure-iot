@@ -11,7 +11,7 @@ namespace EsriDeviceSimulator
     class Program
     {
         // plug-in the iothub connection string here
-        static string IotHubConnectionString = "HostName=esri-simulator-test.azure-devices.net;SharedAccessKeyName=iothubowner;SharedAccessKey=0Hknvn6FdzXP4KUQm1H7TlaWfC8LtBunEDHXrYqBEME=";
+        static string IotHubConnectionString = "<TODO>";
 
         // NOTE: all of these devices must already be registered in the iot hub
         static string[] DeviceIdList = { 
@@ -26,7 +26,7 @@ namespace EsriDeviceSimulator
 
             foreach(string deviceId in DeviceIdList)
             {
-                sims.Add(new GeoDeviceSimulator(IotHubConnectionString, deviceId, TimeSpan.FromSeconds(3)));
+                sims.Add(new GeoDeviceSimulator(IotHubConnectionString, deviceId, TimeSpan.FromSeconds(1)));
             }
 
             foreach(var sim in sims)
