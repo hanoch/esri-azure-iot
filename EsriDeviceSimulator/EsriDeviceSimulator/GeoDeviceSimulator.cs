@@ -90,7 +90,7 @@ namespace EsriDeviceSimulator
         {
             return System.Text.Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new
             {
-                UID = id,
+                DeviceId = id,
                 StartTime = GetEpoch(),
                 geometry = new
                 {
