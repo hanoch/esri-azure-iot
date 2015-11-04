@@ -97,11 +97,7 @@ namespace EsriDeviceSimulator
 
         public static byte[] GenerateTelemetryBytes(string id, GeoData geoData)
         {
-            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new
-            {
-                deviceId = id,
-                geoData = geoData
-            }));
+            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(geoData));
         }
 
         static long GetEpoch()
