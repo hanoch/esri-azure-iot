@@ -25,7 +25,6 @@
 package com.esri.geoevent.transport.azure;
 
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 
 import com.esri.ges.core.component.ComponentException;
 import com.esri.ges.core.component.RunningState;
@@ -36,24 +35,46 @@ import com.esri.ges.transport.GeoEventAwareTransport;
 import com.esri.ges.transport.OutboundTransportBase;
 import com.esri.ges.transport.TransportDefinition;
 import com.esri.ges.util.Validator;
+import com.microsoft.azure.eventhubs.EventData;
+import com.microsoft.azure.eventhubs.EventHubClient;
 import com.microsoft.azure.iot.service.sdk.FeedbackReceiver;
 import com.microsoft.azure.iot.service.sdk.ServiceClient;
+//import com.microsoft.azure.servicebus.ConnectionStringBuilder;
+
 
 public class AzureIoTHubOutboundTransport extends OutboundTransportBase implements GeoEventAwareTransport
 {
 	// logger
 	private static final BundleLogger LOGGER = BundleLoggerFactory.getLogger(AzureEventHubInboundTransport.class);
 
+
 	// connection properties
-	private String	connectionString	= "";
-	private String	gedName						= "";
-	private String	deviceIdFieldName	= "";
+	private String		iotServiceType			= "";
+	private String		connectionString		= "";
+	private String		deviceIdGedName			= "";
+	private String		deviceIdFieldName		= "";
+
 
 	private volatile boolean propertiesNeedUpdating = false;
 
-	// client and receiver
+	private boolean		isEventHubType 				= true;
+
+	// device id client and receiver
 	private static ServiceClient		serviceClient			= null;
 	private static FeedbackReceiver	feedbackReceiver	= null;
+
+	// event hub client
+	EventHubClient ehClient = null;
+
+	// send notifications to the Event Hub
+	//final String namespaceName = "panamaca-ns";
+	//final String eventHubName = "esri-output-eh";
+	//final String sharedAccessKeyName = "owner";
+	//final String sharedAccessKey = "joweu7Rg/Ld0tzwur4RTDZ4DXZbvtg3xTD5DbLilavA=";
+	//ConnectionStringBuilder ehConnectionStrBuilder = new ConnectionStringBuilder(namespaceName, eventHubName, sharedAccessKeyName, sharedAccessKey);
+	//String ehConnectionStr = ehConnectionStrBuilder.toString();
+	//String ehConnectionStr="Endpoint=sb://panamaca-ns.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=yWA/GSJ0ztV4L8pvY/1jrrEhxLnsWDi/eT61l58dXAw=";
+
 
 	public AzureIoTHubOutboundTransport(TransportDefinition definition) throws ComponentException
 	{
@@ -79,8 +100,19 @@ public class AzureIoTHubOutboundTransport extends OutboundTransportBase implemen
 	{
 		try
 		{
-			// get the properties from the connector properties
 			boolean somethingChanged = false;
+
+			if (hasProperty(AzureIoTHubOutboundTransportDefinition.IOT_SERVICE_TYPE_PROPERTY_NAME))
+			{
+				// IoT Service Type
+				String newIotServiceType = getProperty(AzureIoTHubOutboundTransportDefinition.IOT_SERVICE_TYPE_PROPERTY_NAME).getValueAsString();
+				if (!iotServiceType.equals(newIotServiceType))
+				{
+					iotServiceType = newIotServiceType;
+					somethingChanged = true;
+				}
+			}
+			// Connection String
 			if (hasProperty(AzureIoTHubOutboundTransportDefinition.CONNECTION_STRING_PROPERTY_NAME))
 			{
 				String newConnectionString = getProperty(AzureIoTHubOutboundTransportDefinition.CONNECTION_STRING_PROPERTY_NAME).getValueAsString();
@@ -90,15 +122,17 @@ public class AzureIoTHubOutboundTransport extends OutboundTransportBase implemen
 					somethingChanged = true;
 				}
 			}
-			if (hasProperty(AzureIoTHubOutboundTransportDefinition.GED_NAME_PROPERTY_NAME))
+			// Device Id GED Name
+			if (hasProperty(AzureIoTHubOutboundTransportDefinition.DEVICE_ID_GED_NAME_PROPERTY_NAME))
 			{
-				String newGEDName = getProperty(AzureIoTHubOutboundTransportDefinition.GED_NAME_PROPERTY_NAME).getValueAsString();
-				if (!gedName.equals(newGEDName))
+				String newGEDName = getProperty(AzureIoTHubOutboundTransportDefinition.DEVICE_ID_GED_NAME_PROPERTY_NAME).getValueAsString();
+				if (!deviceIdGedName.equals(newGEDName))
 				{
-					gedName = newGEDName;
+					deviceIdGedName = newGEDName;
 					somethingChanged = true;
 				}
 			}
+			// Device Id Field Name
 			if (hasProperty(AzureIoTHubOutboundTransportDefinition.DEVICE_ID_FIELD_NAME_PROPERTY_NAME))
 			{
 				String newDeviceIdFieldName = getProperty(AzureIoTHubOutboundTransportDefinition.DEVICE_ID_FIELD_NAME_PROPERTY_NAME).getValueAsString();
@@ -131,15 +165,25 @@ public class AzureIoTHubOutboundTransport extends OutboundTransportBase implemen
 			}
 
 			// setup
-			serviceClient = ServiceClient.createFromConnectionString(connectionString);
-			serviceClient.open();
-			// feedbackReceiver = serviceClient.getFeedbackReceiver(deviceId);
-			// if (feedbackReceiver == null)
-			// {
-			// // TODO: error messages
-			// throw new RuntimeException("ERROR");
-			// }
-			// feedbackReceiver.open();
+			isEventHubType = AzureIoTHubOutboundTransportDefinition.IOT_SERVICE_TYPE_EVENT_HUB.equals(iotServiceType);
+			if (isEventHubType)
+			{
+				
+			}
+			else
+			{
+				// IoT Device
+				serviceClient = ServiceClient.createFromConnectionString(connectionString);
+				serviceClient.open();
+
+				// feedbackReceiver = serviceClient.getFeedbackReceiver(deviceId);
+				// if (feedbackReceiver == null)
+				// {
+				// // TODO: error messages
+				// throw new RuntimeException("ERROR");
+				// }
+				// feedbackReceiver.open();
+			}
 
 			setErrorMessage(null);
 			setRunningState(RunningState.STARTED);
@@ -198,24 +242,36 @@ public class AzureIoTHubOutboundTransport extends OutboundTransportBase implemen
 
 			try
 			{
-				Object deviceIdObj = geoEvent.getField(deviceIdFieldName);
-				String deviceId = "";
-				if (deviceIdObj != null)
-					deviceId = deviceIdObj.toString();
-
-				// send the message
-				if (Validator.isNotBlank(deviceId))
+				if (isEventHubType)
 				{
-					String message = new String(buffer.array(), StandardCharsets.UTF_8);
-					serviceClient.sendAsync(deviceId, message);
+					// Send Event to an Event Hub
+					byte[] payloadBytes = "Test AMQP message from GeoEvent".getBytes("UTF-8");
+					EventData sendEvent = new EventData(payloadBytes);
 
-					// receive feedback from the device
-					// FeedbackBatch feedback = feedbackReceiver.receive(10000);
-					// feedback.toString();
+					EventHubClient ehClient = EventHubClient.createFromConnectionStringSync(connectionString);
+					ehClient.sendSync(sendEvent);
 				}
 				else
 				{
-					LOGGER.warn("FAILED_TO_SEND_INVALID_DEVICE_ID", deviceIdFieldName);
+					// Send Event to a Device
+					Object deviceIdObj = geoEvent.getField(deviceIdFieldName);
+					String deviceId = "";
+					if (deviceIdObj != null)
+						deviceId = deviceIdObj.toString();
+	
+					if (Validator.isNotBlank(deviceId))
+					{
+						String message = new String(buffer.array(), StandardCharsets.UTF_8);
+						serviceClient.sendAsync(deviceId, message);
+	
+						// receive feedback from the device
+						// FeedbackBatch feedback = feedbackReceiver.receive(10000);
+						// feedback.toString();
+					}
+					else
+					{
+						LOGGER.warn("FAILED_TO_SEND_INVALID_DEVICE_ID", deviceIdFieldName);
+					}
 				}
 			}
 			catch (Exception e)

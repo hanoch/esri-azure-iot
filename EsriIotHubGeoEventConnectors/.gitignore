@@ -30,6 +30,13 @@ target
 .buildpath
 
 
+#############
+## InteliJ
+#############
+.idea/
+*.iml
+
+
 #################
 ## Visual Studio
 #################
