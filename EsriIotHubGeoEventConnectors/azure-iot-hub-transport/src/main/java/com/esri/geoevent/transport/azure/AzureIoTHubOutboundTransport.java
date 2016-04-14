@@ -156,7 +156,8 @@ public class AzureIoTHubOutboundTransport extends OutboundTransportBase implemen
 			isEventHubType = AzureIoTHubOutboundTransportDefinition.IOT_SERVICE_TYPE_EVENT_HUB.equals(iotServiceType);
 			if (isEventHubType)
 			{
-
+				// Event Hub
+				EventHubClient ehClient = EventHubClient.createFromConnectionStringSync(connectionString);
 			}
 			else
 			{
@@ -187,6 +188,20 @@ public class AzureIoTHubOutboundTransport extends OutboundTransportBase implemen
 
 	protected void cleanup()
 	{
+		// clean up the event hub client
+		if (ehClient != null)
+		{
+			try
+			{
+				ehClient.close();
+			}
+			catch (Exception error)
+			{
+				;
+			}
+		}
+
+		
 		// clean up the service client
 		if (serviceClient != null)
 		{
@@ -236,7 +251,6 @@ public class AzureIoTHubOutboundTransport extends OutboundTransportBase implemen
 					byte[] payloadBytes = "Test AMQP message from GeoEvent".getBytes("UTF-8");
 					EventData sendEvent = new EventData(payloadBytes);
 
-					EventHubClient ehClient = EventHubClient.createFromConnectionStringSync(connectionString);
 					ehClient.sendSync(sendEvent);
 				}
 				else

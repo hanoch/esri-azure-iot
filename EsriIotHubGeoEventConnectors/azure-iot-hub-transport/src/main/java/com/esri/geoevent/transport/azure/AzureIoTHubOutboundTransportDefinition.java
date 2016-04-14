@@ -56,10 +56,11 @@ public class AzureIoTHubOutboundTransportDefinition extends TransportDefinitionB
 		super(TransportType.OUTBOUND);
 		try
 		{
+			String dependsOnNone = null;
 			List<LabeledValue> iotServiceTypesAllowedValues = new ArrayList<LabeledValue>();
 			iotServiceTypesAllowedValues.add(new LabeledValue("${com.esri.geoevent.transport.azure-iot-hub-transport.IOT_SERVICE_TYPE_EVENT_HUB_LBL}", IOT_SERVICE_TYPE_EVENT_HUB));
 			iotServiceTypesAllowedValues.add(new LabeledValue("${com.esri.geoevent.transport.azure-iot-hub-transport.IOT_SERVICE_TYPE_IOT_DEVICE_LBL}", IOT_SERVICE_TYPE_IOT_DEVICE));
-			propertyDefinitions.put(IOT_SERVICE_TYPE_PROPERTY_NAME, new PropertyDefinition(IOT_SERVICE_TYPE_PROPERTY_NAME, PropertyType.String, IOT_SERVICE_TYPE_DEFAULT_VALUE, "${com.esri.geoevent.transport.azure-iot-hub-transport.IOT_SERVICE_TYPE_LBL}", "${com.esri.geoevent.transport.azure-iot-hub-transport.IOT_SERVICE_TYPE_DESC}", IOT_SERVICE_TYPE_EVENT_HUB, true, false, iotServiceTypesAllowedValues));
+			propertyDefinitions.put(IOT_SERVICE_TYPE_PROPERTY_NAME, new PropertyDefinition(IOT_SERVICE_TYPE_PROPERTY_NAME, PropertyType.String, IOT_SERVICE_TYPE_DEFAULT_VALUE, "${com.esri.geoevent.transport.azure-iot-hub-transport.IOT_SERVICE_TYPE_LBL}", "${com.esri.geoevent.transport.azure-iot-hub-transport.IOT_SERVICE_TYPE_DESC}", dependsOnNone, true, false, iotServiceTypesAllowedValues));
 
 			propertyDefinitions.put(CONNECTION_STRING_PROPERTY_NAME, new PropertyDefinition(CONNECTION_STRING_PROPERTY_NAME, PropertyType.String, null, "${com.esri.geoevent.transport.azure-iot-hub-transport.CONNECTION_STR_LBL}", "${com.esri.geoevent.transport.azure-iot-hub-transport.CONNECTION_STR_DESC}", true, false));
 			propertyDefinitions.put(DEVICE_ID_GED_NAME_PROPERTY_NAME, new PropertyDefinition(DEVICE_ID_GED_NAME_PROPERTY_NAME, PropertyType.GeoEventDefinition, null, "${com.esri.geoevent.transport.azure-iot-hub-transport.DEVICE_ID_GED_NAME_LBL}", "${com.esri.geoevent.transport.azure-iot-hub-transport.DEVICE_ID_GED_NAME_DESC}", "iotServiceType=IoT Device", true, false));
