@@ -143,6 +143,9 @@ public class AzureIoTHubOutboundTransport extends OutboundTransportBase implemen
 
 	public synchronized void setup()
 	{
+		String errorMessage = null;
+		RunningState runningState = RunningState.STARTED; 
+		
 		try
 		{
 			readProperties();
@@ -158,6 +161,12 @@ public class AzureIoTHubOutboundTransport extends OutboundTransportBase implemen
 			{
 				// Event Hub
 				EventHubClient ehClient = EventHubClient.createFromConnectionStringSync(connectionString);
+				if (ehClient == null)
+				{
+					runningState = RunningState.ERROR;
+					errorMessage = LOGGER.translate("FAILED_TO_CREATE_EH_CLIENT", connectionString);
+					LOGGER.error(errorMessage);
+				}
 			}
 			else
 			{
@@ -174,8 +183,8 @@ public class AzureIoTHubOutboundTransport extends OutboundTransportBase implemen
 				// feedbackReceiver.open();
 			}
 
-			setErrorMessage(null);
-			setRunningState(RunningState.STARTED);
+			setErrorMessage(errorMessage);
+			setRunningState(runningState);
 		}
 		catch (Exception ex)
 		{
@@ -248,10 +257,19 @@ public class AzureIoTHubOutboundTransport extends OutboundTransportBase implemen
 				if (isEventHubType)
 				{
 					// Send Event to an Event Hub
-					byte[] payloadBytes = "Test AMQP message from GeoEvent".getBytes("UTF-8");
-					EventData sendEvent = new EventData(payloadBytes);
+					String message = new String(buffer.array(), StandardCharsets.UTF_8);
+					byte[] bytes = message.getBytes(StandardCharsets.UTF_8);  // "UTF_8"
+					//bytes = buffer.array();
+					EventData sendEvent = new EventData(bytes);
 
-					ehClient.sendSync(sendEvent);
+					if (ehClient != null)
+					{
+						ehClient.sendSync(sendEvent);
+					}
+					else
+					{
+						LOGGER.warn("FAILED_TO_SEND_INVALID_EH_CONNECTION", connectionString);
+					}
 				}
 				else
 				{

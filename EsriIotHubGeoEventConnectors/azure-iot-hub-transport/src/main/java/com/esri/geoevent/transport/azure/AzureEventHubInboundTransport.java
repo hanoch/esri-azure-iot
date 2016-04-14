@@ -169,7 +169,9 @@ public class AzureEventHubInboundTransport extends InboundTransportBase
 					LOGGER.debug("CREATED_CLIENT_RECEIVER", i);
 				}
 				else
+				{
 					throw new Exception(LOGGER.translate("UNABLE_TO_CREATE_RECEIVER", i));
+				}
 			}
 			LOGGER.debug("RECEVERS_CREATED");
 			setRunningState(RunningState.STARTED);
