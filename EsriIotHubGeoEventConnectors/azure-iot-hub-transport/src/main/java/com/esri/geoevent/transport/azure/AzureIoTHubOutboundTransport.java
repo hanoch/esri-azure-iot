@@ -40,42 +40,29 @@ import com.microsoft.azure.eventhubs.EventData;
 import com.microsoft.azure.eventhubs.EventHubClient;
 import com.microsoft.azure.iot.service.sdk.FeedbackReceiver;
 import com.microsoft.azure.iot.service.sdk.ServiceClient;
-//import com.microsoft.azure.servicebus.ConnectionStringBuilder;
 
 
 public class AzureIoTHubOutboundTransport extends OutboundTransportBase implements GeoEventAwareTransport
 {
 	// logger
-	private static final BundleLogger LOGGER = BundleLoggerFactory.getLogger(AzureEventHubInboundTransport.class);
-
+	private static final BundleLogger	LOGGER									= BundleLoggerFactory.getLogger(AzureEventHubInboundTransport.class);
 
 	// connection properties
-	private String		iotServiceType			= "";
-	private String		connectionString		= "";
-	private String		deviceIdGedName			= "";
-	private String		deviceIdFieldName		= "";
+	private String										iotServiceType					= "";
+	private String										connectionString				= "";
+	private String										deviceIdGedName					= "";
+	private String										deviceIdFieldName				= "";
 
+	private volatile boolean					propertiesNeedUpdating	= false;
 
-	private volatile boolean propertiesNeedUpdating = false;
-
-	private boolean		isEventHubType 				= true;
+	private boolean										isEventHubType					= true;
 
 	// device id client and receiver
-	private static ServiceClient		serviceClient			= null;
-	private static FeedbackReceiver	feedbackReceiver	= null;
+	private static ServiceClient			serviceClient						= null;
+	private static FeedbackReceiver		feedbackReceiver				= null;
 
 	// event hub client
-	EventHubClient ehClient = null;
-
-	// send notifications to the Event Hub
-	//final String namespaceName = "panamaca-ns";
-	//final String eventHubName = "esri-output-eh";
-	//final String sharedAccessKeyName = "owner";
-	//final String sharedAccessKey = "joweu7Rg/Ld0tzwur4RTDZ4DXZbvtg3xTD5DbLilavA=";
-	//ConnectionStringBuilder ehConnectionStrBuilder = new ConnectionStringBuilder(namespaceName, eventHubName, sharedAccessKeyName, sharedAccessKey);
-	//String ehConnectionStr = ehConnectionStrBuilder.toString();
-	//String ehConnectionStr="Endpoint=sb://panamaca-ns.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=yWA/GSJ0ztV4L8pvY/1jrrEhxLnsWDi/eT61l58dXAw=";
-
+	EventHubClient										ehClient								= null;
 
 	public AzureIoTHubOutboundTransport(TransportDefinition definition) throws ComponentException
 	{
@@ -169,7 +156,7 @@ public class AzureIoTHubOutboundTransport extends OutboundTransportBase implemen
 			isEventHubType = AzureIoTHubOutboundTransportDefinition.IOT_SERVICE_TYPE_EVENT_HUB.equals(iotServiceType);
 			if (isEventHubType)
 			{
-				
+
 			}
 			else
 			{
@@ -259,12 +246,12 @@ public class AzureIoTHubOutboundTransport extends OutboundTransportBase implemen
 					String deviceId = "";
 					if (deviceIdObj != null)
 						deviceId = deviceIdObj.toString();
-	
+
 					if (Validator.isNotBlank(deviceId))
 					{
 						String message = new String(buffer.array(), StandardCharsets.UTF_8);
 						serviceClient.sendAsync(deviceId, message);
-	
+
 						// receive feedback from the device
 						// FeedbackBatch feedback = feedbackReceiver.receive(10000);
 						// feedback.toString();

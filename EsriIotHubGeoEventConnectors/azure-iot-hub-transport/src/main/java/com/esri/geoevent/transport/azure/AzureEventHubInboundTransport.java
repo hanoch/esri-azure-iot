@@ -40,39 +40,44 @@ import com.microsoft.azure.eventhubs.PartitionReceiver;
 import com.microsoft.azure.servicebus.ConnectionStringBuilder;
 import com.microsoft.azure.servicebus.ServiceBusException;
 
-public class AzureEventHubInboundTransport extends InboundTransportBase {
+public class AzureEventHubInboundTransport extends InboundTransportBase
+{
 	// logger
-	private static final BundleLogger LOGGER = BundleLoggerFactory.getLogger(AzureEventHubInboundTransport.class);
+	private static final BundleLogger	LOGGER											= BundleLoggerFactory.getLogger(AzureEventHubInboundTransport.class);
 
-	private String eventHubNamespace = "";
-	private String eventHubName = "";
-	private String eventHubSharedAccessKeyName = "";
-	private String eventHubSharedAccessKey = "";
-	private int eventHubNumberOfPartitions = 4;
-	private PartitionReceiver[] receivers;
-	private EventHubClient[] ehClients;
-	private Thread thread = null;
-	private String errorMessage;
+	private String										eventHubNamespace						= "";
+	private String										eventHubName								= "";
+	private String										eventHubSharedAccessKeyName	= "";
+	private String										eventHubSharedAccessKey			= "";
+	private int												eventHubNumberOfPartitions	= 4;
+	private PartitionReceiver[]				receivers;
+	private EventHubClient[]					ehClients;
+	private Thread										thread											= null;
+	private String										errorMessage;
 
-	public AzureEventHubInboundTransport(TransportDefinition definition) throws ComponentException {
+	public AzureEventHubInboundTransport(TransportDefinition definition) throws ComponentException
+	{
 		super(definition);
 	}
 
 	@Override
-	public synchronized void start() {
-		switch (getRunningState()) {
-		case STARTING:
-		case STARTED:
-		case ERROR:
-			return;
-		default:
+	public synchronized void start()
+	{
+		switch (getRunningState())
+		{
+			case STARTING:
+			case STARTED:
+			case ERROR:
+				return;
+			default:
 		}
 		setRunningState(RunningState.STARTING);
 		createReceivers();
 	}
 
 	@Override
-	public synchronized void stop() {
+	public synchronized void stop()
+	{
 		if (getRunningState() == RunningState.STOPPING)
 			return;
 		errorMessage = null;
@@ -82,22 +87,33 @@ public class AzureEventHubInboundTransport extends InboundTransportBase {
 		setRunningState(RunningState.STOPPED);
 	}
 
-	protected void cleanup() {
-		for (PartitionReceiver receiver : receivers) {
-			if (receiver != null) {
-				try {
+	protected void cleanup()
+	{
+		for (PartitionReceiver receiver : receivers)
+		{
+			if (receiver != null)
+			{
+				try
+				{
 					receiver.closeSync();
-				} catch (Exception e) {
+				}
+				catch (Exception e)
+				{
 					LOGGER.warn("CLEANUP_ERROR", e);
 				}
 				receiver = null;
 			}
 		}
-		for (EventHubClient ehClient : ehClients) {
-			if (ehClient != null) {
-				try {
+		for (EventHubClient ehClient : ehClients)
+		{
+			if (ehClient != null)
+			{
+				try
+				{
 					ehClient.closeSync();
-				} catch (ServiceBusException e) {
+				}
+				catch (ServiceBusException e)
+				{
 					LOGGER.warn("CLEANUP_ERROR", e);
 				}
 				ehClient = null;
@@ -107,57 +123,68 @@ public class AzureEventHubInboundTransport extends InboundTransportBase {
 	}
 
 	@Override
-	public void validate() {
+	public void validate()
+	{
 		// TODO: Validate
 	}
 
 	@Override
-	public synchronized boolean isRunning() {
+	public synchronized boolean isRunning()
+	{
 		return (getRunningState() == RunningState.STARTED);
 	}
 
-	public void readProperties() throws Exception {
-		try {
+	public void readProperties() throws Exception
+	{
+		try
+		{
 			eventHubNamespace = getProperty("eventHubNamespace").getValueAsString();
 			eventHubName = getProperty("eventHubName").getValueAsString();
 			eventHubSharedAccessKeyName = getProperty("eventHubSharedAccessKeyName").getValueAsString();
 			eventHubSharedAccessKey = getProperty("eventHubSharedAccessKey").getValueAsString();
 			eventHubNumberOfPartitions = Integer.parseInt(getProperty("eventHubNumberOfPartitions").getValueAsString());
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			errorMessage = LOGGER.translate("ERROR_READING_PROPS");
 			LOGGER.error("ERROR_READING_PROPS", e);
 		}
 	}
 
-	private void createReceivers() {
-		try {
+	private void createReceivers()
+	{
+		try
+		{
 			errorMessage = null;
 			readProperties();
 
 			receivers = new PartitionReceiver[eventHubNumberOfPartitions];
 			ehClients = new EventHubClient[eventHubNumberOfPartitions];
-			ConnectionStringBuilder connStr = new ConnectionStringBuilder(eventHubNamespace, eventHubName,
-					eventHubSharedAccessKeyName, eventHubSharedAccessKey);
+			ConnectionStringBuilder connStr = new ConnectionStringBuilder(eventHubNamespace, eventHubName, eventHubSharedAccessKeyName, eventHubSharedAccessKey);
 
-			for (int i = 0; i < eventHubNumberOfPartitions; i++) {
+			for (int i = 0; i < eventHubNumberOfPartitions; i++)
+			{
 				EventHubClient ehClient = EventHubClient.createFromConnectionString(connStr.toString()).get();
-				if (ehClient != null) {
+				if (ehClient != null)
+				{
 					ehClients[i] = ehClient;
 					LOGGER.debug("CREATED_EVENT_HUB_CLIENT", i);
 				}
-				PartitionReceiver receiver = ehClient
-						.createReceiver(EventHubClient.DEFAULT_CONSUMER_GROUP_NAME, Integer.toString(i), Instant.now())
-						.get();
-				if (receiver != null) {
+				PartitionReceiver receiver = ehClient.createReceiver(EventHubClient.DEFAULT_CONSUMER_GROUP_NAME, Integer.toString(i), Instant.now()).get();
+				if (receiver != null)
+				{
 					receiver.setReceiveHandler(new EventHandler(Integer.toString(i)));
 					receivers[i] = receiver;
 					LOGGER.debug("CREATED_CLIENT_RECEIVER", i);
-				} else
+				}
+				else
 					throw new Exception(LOGGER.translate("UNABLE_TO_CREATE_RECEIVER", i));
 			}
 			LOGGER.debug("RECEVERS_CREATED");
 			setRunningState(RunningState.STARTED);
-		} catch (Exception error) {
+		}
+		catch (Exception error)
+		{
 			errorMessage = LOGGER.translate("CREATE_EVENT_HUB_RECEIVER_ERROR", error.getMessage());
 			LOGGER.error(errorMessage, error);
 			setRunningState(RunningState.ERROR);
@@ -165,23 +192,30 @@ public class AzureEventHubInboundTransport extends InboundTransportBase {
 		}
 	}
 
-	private void receive(byte[] bytes) {
-		if (bytes != null && bytes.length > 0) {
+	private void receive(byte[] bytes)
+	{
+		if (bytes != null && bytes.length > 0)
+		{
 			String str = new String(bytes);
 			str = str + '\n';
 			byte[] newBytes = str.getBytes();
 
 			ByteBuffer bb = ByteBuffer.allocate(newBytes.length);
-			try {
+			try
+			{
 				bb.put(newBytes);
 				bb.flip();
 				byteListener.receive(bb, "");
 				bb.clear();
-			} catch (BufferOverflowException boe) {
+			}
+			catch (BufferOverflowException boe)
+			{
 				LOGGER.error("BUFFER_OVERFLOW_ERROR", boe);
 				bb.clear();
 				setRunningState(RunningState.ERROR);
-			} catch (Exception e) {
+			}
+			catch (Exception e)
+			{
 				LOGGER.error("UNEXPECTED_ERROR", e);
 				stop();
 				setRunningState(RunningState.ERROR);
@@ -189,16 +223,20 @@ public class AzureEventHubInboundTransport extends InboundTransportBase {
 		}
 	}
 
-	public final class EventHandler extends PartitionReceiveHandler {
+	public final class EventHandler extends PartitionReceiveHandler
+	{
 		private String partitionId;
 
-		public EventHandler(final String partitionId) {
+		public EventHandler(final String partitionId)
+		{
 			this.partitionId = partitionId;
 		}
 
 		@Override
-		public void onReceive(Iterable<EventData> events) {
-			for (EventData event : events) {
+		public void onReceive(Iterable<EventData> events)
+		{
+			for (EventData event : events)
+			{
 				// String message = new String(event.getBody(),
 				// Charset.defaultCharset());
 				receive(event.getBody());
@@ -206,24 +244,28 @@ public class AzureEventHubInboundTransport extends InboundTransportBase {
 		}
 
 		@Override
-		public void onClose(Throwable arg0) {
+		public void onClose(Throwable arg0)
+		{
 			// TODO Auto-generated method stub
 
 		}
 
 		@Override
-		public void onError(Throwable arg0) {
+		public void onError(Throwable arg0)
+		{
 			LOGGER.warn("EVENT_HUB_RECEIVER_ERROR", arg0);
 		}
 	}
 
 	@Override
-	public String getStatusDetails() {
+	public String getStatusDetails()
+	{
 		return errorMessage;
 	}
 
 	@Override
-	public boolean isClusterable() {
+	public boolean isClusterable()
+	{
 		return false;
 	}
 

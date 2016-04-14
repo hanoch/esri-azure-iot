@@ -23,6 +23,9 @@
  */
 package com.esri.geoevent.transport.azure;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.esri.ges.core.property.LabeledValue;
 import com.esri.ges.core.property.PropertyDefinition;
 import com.esri.ges.core.property.PropertyException;
@@ -32,26 +35,21 @@ import com.esri.ges.framework.i18n.BundleLoggerFactory;
 import com.esri.ges.transport.TransportDefinitionBase;
 import com.esri.ges.transport.TransportType;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class AzureIoTHubOutboundTransportDefinition extends TransportDefinitionBase
 {
 	// logger
-	private static final BundleLogger LOGGER = BundleLoggerFactory.getLogger(AzureIoTHubOutboundTransportDefinition.class);
+	private static final BundleLogger	LOGGER															= BundleLoggerFactory.getLogger(AzureIoTHubOutboundTransportDefinition.class);
 
 	// property names
-	public static final String IOT_SERVICE_TYPE_PROPERTY_NAME = "iotServiceType";
-	public static final String CONNECTION_STRING_PROPERTY_NAME = "connectionString";
-	public static final String DEVICE_ID_GED_NAME_PROPERTY_NAME = "deviceIdGedName";
-	public static final String DEVICE_ID_FIELD_NAME_PROPERTY_NAME = "deviceIdFieldName";
+	public static final String				IOT_SERVICE_TYPE_PROPERTY_NAME			= "iotServiceType";
+	public static final String				CONNECTION_STRING_PROPERTY_NAME			= "connectionString";
+	public static final String				DEVICE_ID_GED_NAME_PROPERTY_NAME		= "deviceIdGedName";
+	public static final String				DEVICE_ID_FIELD_NAME_PROPERTY_NAME	= "deviceIdFieldName";
 
+	public static final String				IOT_SERVICE_TYPE_EVENT_HUB					= "Event Hub";
+	public static final String				IOT_SERVICE_TYPE_IOT_DEVICE					= "IoT Device";
 
-	public static final String IOT_SERVICE_TYPE_EVENT_HUB = "Event Hub";
-	public static final String IOT_SERVICE_TYPE_IOT_DEVICE = "IoT Device";
-
-	public static final String IOT_SERVICE_TYPE_DEFAULT_VALUE = IOT_SERVICE_TYPE_EVENT_HUB;
-
+	public static final String				IOT_SERVICE_TYPE_DEFAULT_VALUE			= IOT_SERVICE_TYPE_EVENT_HUB;
 
 	public AzureIoTHubOutboundTransportDefinition()
 	{

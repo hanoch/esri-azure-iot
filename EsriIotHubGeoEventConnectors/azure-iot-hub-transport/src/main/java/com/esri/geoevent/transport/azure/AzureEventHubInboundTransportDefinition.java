@@ -35,14 +35,14 @@ import com.esri.ges.transport.TransportType;
 public class AzureEventHubInboundTransportDefinition extends TransportDefinitionBase
 {
 	// logger
-	private static final BundleLogger LOGGER = BundleLoggerFactory.getLogger(AzureEventHubInboundTransportDefinition.class);
+	private static final BundleLogger	LOGGER																					= BundleLoggerFactory.getLogger(AzureEventHubInboundTransportDefinition.class);
 
 	// property names
-	public static final String	EVENT_HUB_NAME_PROPERTY_NAME				= "eventHubName";
-	public static final String	EVENT_HUB_NAMESPACE_PROPERTY_NAME				= "eventHubNamespace";
-	public static final String	EVENT_HUB_SHARED_ACCESS_KEY_NAME_PROPERTY_NAME	= "eventHubSharedAccessKeyName";
-	public static final String	EVENT_HUB_SHARED_ACCESS_KEY_PROPERTY_NAME	= "eventHubSharedAccessKey";
-	public static final String	EVENT_HUB_NUMBER_OF_PARTITION_PROPERTY_NAME	= "eventHubNumberOfPartitions";
+	public static final String				EVENT_HUB_NAME_PROPERTY_NAME										= "eventHubName";
+	public static final String				EVENT_HUB_NAMESPACE_PROPERTY_NAME								= "eventHubNamespace";
+	public static final String				EVENT_HUB_SHARED_ACCESS_KEY_NAME_PROPERTY_NAME	= "eventHubSharedAccessKeyName";
+	public static final String				EVENT_HUB_SHARED_ACCESS_KEY_PROPERTY_NAME				= "eventHubSharedAccessKey";
+	public static final String				EVENT_HUB_NUMBER_OF_PARTITION_PROPERTY_NAME			= "eventHubNumberOfPartitions";
 
 	public AzureEventHubInboundTransportDefinition()
 	{
