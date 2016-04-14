@@ -37,7 +37,6 @@ import com.microsoft.azure.eventhubs.EventData;
 import com.microsoft.azure.eventhubs.EventHubClient;
 import com.microsoft.azure.eventhubs.PartitionReceiveHandler;
 import com.microsoft.azure.eventhubs.PartitionReceiver;
-import com.microsoft.azure.servicebus.ConnectionStringBuilder;
 import com.microsoft.azure.servicebus.ServiceBusException;
 
 public class AzureEventHubInboundTransport extends InboundTransportBase
@@ -45,14 +44,10 @@ public class AzureEventHubInboundTransport extends InboundTransportBase
 	// logger
 	private static final BundleLogger	LOGGER											= BundleLoggerFactory.getLogger(AzureEventHubInboundTransport.class);
 
-	private String										eventHubNamespace						= "";
-	private String										eventHubName								= "";
-	private String										eventHubSharedAccessKeyName	= "";
-	private String										eventHubSharedAccessKey			= "";
+	private String										eventHubConnectionString		= "";
 	private int												eventHubNumberOfPartitions	= 4;
 	private PartitionReceiver[]				receivers;
 	private EventHubClient[]					ehClients;
-	private Thread										thread											= null;
 	private String										errorMessage;
 
 	public AzureEventHubInboundTransport(TransportDefinition definition) throws ComponentException
@@ -138,11 +133,8 @@ public class AzureEventHubInboundTransport extends InboundTransportBase
 	{
 		try
 		{
-			eventHubNamespace = getProperty("eventHubNamespace").getValueAsString();
-			eventHubName = getProperty("eventHubName").getValueAsString();
-			eventHubSharedAccessKeyName = getProperty("eventHubSharedAccessKeyName").getValueAsString();
-			eventHubSharedAccessKey = getProperty("eventHubSharedAccessKey").getValueAsString();
-			eventHubNumberOfPartitions = Integer.parseInt(getProperty("eventHubNumberOfPartitions").getValueAsString());
+			eventHubConnectionString = getProperty(AzureEventHubInboundTransportDefinition.EVENT_HUB_CONNECTION_STRING_PROPERTY_NAME).getValueAsString();
+			eventHubNumberOfPartitions = Integer.parseInt(getProperty(AzureEventHubInboundTransportDefinition.EVENT_HUB_NUMBER_OF_PARTITION_PROPERTY_NAME).getValueAsString());
 		}
 		catch (Exception e)
 		{
@@ -160,11 +152,10 @@ public class AzureEventHubInboundTransport extends InboundTransportBase
 
 			receivers = new PartitionReceiver[eventHubNumberOfPartitions];
 			ehClients = new EventHubClient[eventHubNumberOfPartitions];
-			ConnectionStringBuilder connStr = new ConnectionStringBuilder(eventHubNamespace, eventHubName, eventHubSharedAccessKeyName, eventHubSharedAccessKey);
 
 			for (int i = 0; i < eventHubNumberOfPartitions; i++)
 			{
-				EventHubClient ehClient = EventHubClient.createFromConnectionString(connStr.toString()).get();
+				EventHubClient ehClient = EventHubClient.createFromConnectionString(eventHubConnectionString).get();
 				if (ehClient != null)
 				{
 					ehClients[i] = ehClient;
