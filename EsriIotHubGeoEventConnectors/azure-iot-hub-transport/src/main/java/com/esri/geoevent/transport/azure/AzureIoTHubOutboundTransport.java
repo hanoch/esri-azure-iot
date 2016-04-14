@@ -160,7 +160,7 @@ public class AzureIoTHubOutboundTransport extends OutboundTransportBase implemen
 			if (isEventHubType)
 			{
 				// Event Hub
-				EventHubClient ehClient = EventHubClient.createFromConnectionStringSync(connectionString);
+				ehClient = EventHubClient.createFromConnectionStringSync(connectionString);
 				if (ehClient == null)
 				{
 					runningState = RunningState.ERROR;
